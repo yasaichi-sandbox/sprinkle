@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"math/rand"
@@ -25,7 +26,40 @@ var transforms = []string{
 	"lets " + otherWord,
 }
 
+func readTransformRulesFrom(filename string) ([]string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	transforms = []string{}
+	s := bufio.NewScanner(file)
+
+	for s.Scan() {
+		transforms = append(transforms, s.Text())
+	}
+	if err := s.Err(); err != nil {
+		return nil, err
+	}
+
+	return transforms, nil
+}
+
 func main() {
+	flag.Parse()
+	filename := flag.Arg(0)
+	if filename != "" {
+		rules, err := readTransformRulesFrom(filename)
+
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
+		transforms = rules
+	}
+
 	rand.Seed(time.Now().UTC().UnixNano())
 	s := bufio.NewScanner(os.Stdin)
 
